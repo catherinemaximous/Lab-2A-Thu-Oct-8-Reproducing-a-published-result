@@ -1,7 +1,7 @@
 ---
 title: "Reproducibility Report: Maglio & Polman (2014), Study 1"
 subtitle: "Bumper-rails version"
-author: "Your name here"
+author: "Catherine Maximous"
 date: today
 format:
   html:
@@ -121,11 +121,13 @@ Count the participants in each direction × station combination. Replace each
 
 ```{r}
 d |>
-  count("FIXME", "FIXME")
+  count(DIRECTION, STN_NAME)
 ```
 
 Does this match the sample size in the paper (202 total, 101 per platform)?
 Is the design balanced, with the same *n* in every cell?
+
+Yes, this matches the sample size in the paper. The design is almost balanced not all cells have the same n however they only differ by 1-2 more or less participants. 
 
 ### The 2 × 4 ANOVA
 
@@ -137,7 +139,7 @@ Fill in the formula with the outcome (the distance rating) and the two
 predictors.
 
 ```{r}
-mod <- aov(FIXME ~ FIXME * FIXME, data = d)
+mod <- aov(DISTANCE ~ DIRECTION * STN_NAME, data = d)
 
 summary(mod)
 ```
@@ -179,11 +181,12 @@ ss_residual <- anova_table |>
 
 anova_table |>
   filter(term != "Residuals") |>
-  mutate(partial_eta_sq = "FIXME") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
   select(term, df, statistic, p.value, partial_eta_sq)
 ```
 
 Do your ηp² values round to the paper's .27 (station) and .20 (interaction)?
+Yes, it does. 
 
 ### Station-by-station comparisons
 
@@ -199,20 +202,27 @@ SS_direction / SS_total.
 
 # 1. Keep only the St. George ratings
 st_george <- d |>
-  filter("FIXME")
+  filter(STN_NAME == "STG")
 
 # 2. Which group rated St. George as farther away, eastbound or westbound?
 #    No statistics yet, just the mean rating in each direction.
 st_george |>
-  group_by("FIXME") |>
-  summarize(mean_distance = "FIXME", n = n())
+  group_by("St. George") |>
+  summarize(mean_distance = mean(DISTANCE), n = n())
 
 # 3. One-way ANOVA: distance predicted by direction
-st_george_mod <- aov("FIXME", data = st_george)
-tidy(st_george_mod)
+st_george_mod <- aov(DISTANCE ~ DIRECTION, data = st_george)
+st_george_aov<- tidy(st_george_mod)
 
 # 4. Partial eta squared (reuse your code from above)
-"FIXME"
+ss_residual <- st_george_aov |>
+  filter(term == "Residuals") |>
+  pull(sumsq)
+
+st_george_aov |>
+  filter(term != "Residuals") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
+  select(term, df, statistic, p.value, partial_eta_sq)
 ```
 
 #### Spadina, Bloor-Yonge, and Sherbourne
@@ -223,43 +233,110 @@ chunk three times works. If you want to try something tidier, the
 
 ```{r}
 #| label: spadina
+# 1. Keep only the St. George ratings
+spadina <- d |>
+  filter(STN_NAME == "SPAD")
 
+# 2. Which group rated St. George as farther away, eastbound or westbound?
+#    No statistics yet, just the mean rating in each direction.
+spadina |>
+  group_by("spadina") |>
+  summarize(mean_distance = mean(DISTANCE), n = n())
+
+# 3. One-way ANOVA: distance predicted by direction
+spadina_mod <- aov(DISTANCE ~ DIRECTION, data = spadina)
+spadina_aov<- tidy(spadina_mod)
+
+# 4. Partial eta squared (reuse your code from above)
+ss_residual <- spadina_aov |>
+  filter(term == "Residuals") |>
+  pull(sumsq)
+
+spadina_aov |>
+  filter(term != "Residuals") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
+  select(term, df, statistic, p.value, partial_eta_sq)
 ```
 
 ```{r}
 #| label: bloor-yonge
 
+blooryonge <- d |>
+  filter(STN_NAME == "B-Y")
+
+# 2. Which group rated St. George as farther away, eastbound or westbound?
+#    No statistics yet, just the mean rating in each direction.
+blooryonge |>
+  group_by("blooryonge") |>
+  summarize(mean_distance = mean(DISTANCE), n = n())
+
+# 3. One-way ANOVA: distance predicted by direction
+blooryonge_mod <- aov(DISTANCE ~ DIRECTION, data = blooryonge)
+blooryonge_aov<- tidy(blooryonge_mod)
+
+# 4. Partial eta squared (reuse your code from above)
+ss_residual <- blooryonge_aov |>
+  filter(term == "Residuals") |>
+  pull(sumsq)
+
+blooryonge_aov |>
+  filter(term != "Residuals") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
+  select(term, df, statistic, p.value, partial_eta_sq)
 ```
 
 ```{r}
 #| label: sherbourne
+sherbourne <- d |>
+  filter(STN_NAME == "SHER")
 
+# 2. Which group rated St. George as farther away, eastbound or westbound?
+#    No statistics yet, just the mean rating in each direction.
+sherbourne |>
+  group_by("sherbourne") |>
+  summarize(mean_distance = mean(DISTANCE), n = n())
+
+# 3. One-way ANOVA: distance predicted by direction
+sherbourne_mod <- aov(DISTANCE ~ DIRECTION, data = sherbourne)
+sherbourne_aov<- tidy(sherbourne_mod)
+
+# 4. Partial eta squared (reuse your code from above)
+ss_residual <- sherbourne_aov |>
+  filter(term == "Residuals") |>
+  pull(sumsq)
+
+sherbourne_aov |>
+  filter(term != "Residuals") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
+  select(term, df, statistic, p.value, partial_eta_sq)
 ```
 
 Fill in this table as you go:
 
 | Station | Paper *p* | Your *p* | Paper ηp² | Your ηp² |
 |---|---|---|---|---|
-| St. George | < .001 | | .28 | |
-| Spadina | .001 | | .20 | |
-| Bloor-Yonge | .053 | | .08 | |
-| Sherbourne | < .001 | | .24 | |
+| St. George | < .001 | < 7.22865e-05 | .28 | 0.2772092 |
+| Spadina | .001 | 0.001131006 | .20 | 0.1962763 |
+| Bloor-Yonge | .053 | 0.05284615 | .08 | 0.0774451|
+| Sherbourne | < .001 | < 0.0003052116 | .24 | 0.2356667|
 
 ## Step 5: Reflection
 
 Were you able to reproduce the results you attempted to reproduce? If not, which
 parts could you not reproduce?
 
-> ANSWER HERE
+
+> I was able to reproduce the results for all the stations except STG.
 
 How difficult was it to reproduce the results?
 
-> ANSWER HERE
+> Running the interactions and anova was the most difficult part but the rest of the data is well organized for reproducing. 
+
 
 What made it hard, and what made it easy? Think about the data files, the
 variable names, and how much the paper told you about the analysis.
 
-> ANSWER HERE
+> The variable names and values were all organized which made it easy to navigate the data files and understand what we are analyzing. The hardest part of renaming and filtering and ensuring that all the naming variables are consistent for the anova and interactions. The paper does not report their analyses, they report their results. 
 
 ## Bonus questions
 
@@ -272,7 +349,9 @@ counts. What does that suggest about how the authors' software (SPSS) and R's
 first.
 
 ```{r}
+mod2 <- aov(DISTANCE ~ STN_NAME * DIRECTION, data = d)
 
+summary(mod2)
 ```
 
 **2. Orientation or direction?** The paper describes the factor as
