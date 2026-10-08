@@ -4,9 +4,9 @@ subtitle: "Bumper-rails version"
 author: "Catherine Maximous"
 date: today
 format:
-  html:
+ pdf:
     toc: true
-    toc-location: left
+    toc_depth: 3
     embed-resources: true
 execute:
   error: true
@@ -361,6 +361,27 @@ their ANOVA? Make an `orientation` column with `if_else()` and refit the model
 with it to check.
 
 ```{r}
+st_george <- st_george |>
+  mutate(
+    orientation = if_else(
+      STN_NAME %in% c("B-Y", "SHER"),
+      "toward",
+      "away"
+    )
+  )
+
+st_george_mod2 <- aov(DISTANCE ~ DIRECTION, data = sherbourne)
+st_george2_aov<- tidy(st_george_mod2)
+
+# 4. Partial eta squared (reuse your code from above)
+ss_residual <- st_george2_aov |>
+  filter(term == "Residuals") |>
+  pull(sumsq)
+
+st_george2_aov |>
+  filter(term != "Residuals") |>
+  mutate(partial_eta_sq = sumsq/(sumsq+ss_residual)) |>
+  select(term, df, statistic, p.value, partial_eta_sq)
 
 ```
 
